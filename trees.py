@@ -89,4 +89,4 @@ def createTreeTest():
 
 if __name__ == '__main__':
     #calcShannonEntTest()
-    createTreeTest()
+    createTreeTest()#
