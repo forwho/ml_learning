@@ -1,5 +1,6 @@
 from math import log
 import operator
+import pickle
 
 def calcShannonEnt(dataSet):
     numEntries = len(dataSet)
@@ -66,7 +67,7 @@ def majorityCnt(classList):
 
 def createTree(dataSet, labels):
     classList = [example[-1] for example in dataSet]
-    print(dataSet)
+    #print(dataSet)
     if classList.count(classList[0]) == len(classList):
         return classList[0]
     if len(labels[0]) == 1:
@@ -86,6 +87,25 @@ def createTreeTest():
     MyDat, labels = createDataSet()
     MyTree = createTree(MyDat, labels)
     print(MyTree)
+
+def classify(inputTree, featLabels, testVec):
+    firstStr = list(inputTree.keys())[0]
+    secondDict = inputTree[firstStr]
+    for key in list(secondDict.keys()):
+        if testVec[featIndex] == key:
+            if type(secondDict[key]).__name__ == 'dict':
+                classLabel = classify(secondDict[key], featLabels, testVec)
+            else:   classLabel = secondDict[key]
+    return classLabel
+
+def storeTree(inputTree, filename):
+    fw = open(filename, 'w')
+    pickle.dump(inputTree, fw)
+    fw.close()
+
+def grabTree(filename):
+    fr = open(filename)
+    return pickle.load(fr)
 
 if __name__ == '__main__':
     #calcShannonEntTest()
