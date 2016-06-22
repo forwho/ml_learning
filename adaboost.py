@@ -5,46 +5,63 @@ def loadSimpData():
     classLabels = [1.0, 1.0, -1.0, -1.0, 1.0]
     return datMat, classLabels
 
-def buildStump(dataArr, classLabels):
+def buildStump(dataArr, classLabels, D):
     m, n = shape(dataArr)
     minError = inf
     for i in list(range(n)):
         featureValue = sorted(set([data[i] for data in dataArr]))
-        print(featureValue)
         for val in list(featureValue):
-            errorLt = 0; errorGt = 0
-            listA = []; listB = []
+            labelEstListLt = ones((m, 1)); labelEstListGt = ones((m, 1))
             for data in dataArr:
-                if (data[i] < val):
-                    listA.append(dataArr.index(data))
-                else:
-                    listB.append(dataArr.index(data))
-            for labels in listA:
-                if classLabels[labels] != -1.0:
-                    errorLt += 1.0
-                if classLabels[labels] != 1.0:
-                    errorGt += 1.0
-            for labels in listB:
-                if classLabels[labels] != 1.0:
-                    errorLt += 1.0
-                if classLabels[labels] != -1.0:
-                    errorGt += 1.0
-            print("errorLt: %f, errorGt: %f" % (errorLt, errorGt))
-            if errorLt < minError:
-                minError = errorLt
-                bestStump = {"dim" : i, "thresh" : val, "inequal" : "lt", "error" : minError/5 }
-            if errorGt < minError:
-                minError = errorGt
-                bestStump = {"dim": i, "thresh": val, "inequal": "lt", "error": minError / 5}
-    return bestStump
+                if (data[i] <= val):
+                    labelEstListLt[dataArr.index(data)] = -1.0
+            for data in dataArr:
+                if (data[i] > val):
+                    labelEstListGt[dataArr.index(data)] = -1.0
+            errorEstLt = dot(array(D).T, array(labelEstListLt != mat(classLabels).T))
+            errorEstGt = dot(array(D).T, array(labelEstListGt != mat(classLabels).T))
+            if errorEstLt < minError:
+                minError = errorEstLt
+                bestStump = {"dim" : i, "thresh" : val, "inequal" : "lt", "error" : minError}
+                bestEst = labelEstListLt
+            if errorEstGt < minError:
+                minError = errorEstGt
+                bestStump = {"dim": i, "thresh": val, "inequal": "lt", "error": minError}
+                bestEst = labelEstListGt
+    return bestStump, bestEst
 
-def adaBoostTrainDS(dataArr, classLabels, nuIt = 40):
+def adaBoostTrainDS(dataArr, classLabels, D, nuIt = 40):
     pass
+    bestStrumpList = []
+    m = shape(dataArr)[0]
+    aggClassEst = zeros((m, 1))
+    for i in range(nuIt):
+        bestStrump, bestEst = buildStump(dataArr, classLabels, D)
+        alpha = float(0.5 * log((1 - bestStrump["error"]) / max(bestStrump["error"], 1e-16)))
+        bestStrump["alpha"] = alpha
+        bestStrumpList.append(bestStrump)
+        expon = multiply(-1 * alpha * mat(classLabels), bestEst.T)
+        D = multiply(D, exp(expon).T)
+        D = D/D.sum()
+        aggClassEst += alpha * bestEst
+        aggErrors = multiply(sign(aggClassEst) != mat(classLabels).T, ones((m, 1)))
+        errorRate = aggErrors.sum() / m
+        print("D:",D.T)
+        print("classEst:", bestEst.T)
+        print("aggClassEst:", aggClassEst.T)
+        print("total error:", errorRate.T)
+        if errorRate == 0.0:  break
+    return bestStrumpList
 
 def buildStumpTest():
     datMat, classLabels = loadSimpData()
-    bestStump = buildStump(datMat, classLabels)
-    print(bestStump)
+    D = ones((shape(datMat)[0], 1)) / 5
+    bestStumpList = adaBoostTrainDS(datMat, classLabels, D, 9)
+    #bestStumpList, bestEst = buildStump(datMat, classLabels, D)
+    print(bestStumpList)
+    #print(bestEst)
+    #print(type(list(bestEst)))
+
 
 if __name__ == "__main__":
     buildStumpTest()
