@@ -84,6 +84,9 @@ def handwritingClassTester():
     print("\nthe total number of errors is: %d" % errorCount)
     print("\nthe total error rate is : %f" % (errorCount/float(mTest)))
 
+def BPneuroNet():
+    pass
+
 if __name__ == "__main__":
     hwLabels = []
     trainingFileList = listdir('E:\学习资料\ml\MLiA_SourceCode\machinelearninginaction\Ch02\digits\\trainingDigits')  # load the training set
