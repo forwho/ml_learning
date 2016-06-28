@@ -3,12 +3,25 @@ import matplotlib.pyplot as plt
 
 def loadDataSet():
     dataMat = []; labelMat = []
-    fr = open("E:\学习资料\ml\MLiA_SourceCode\machinelearninginaction\Ch05\\testSet.txt")
+    fr = open("E:\machine learning\codeReg\code\MLiA_SourceCode\machinelearninginaction\Ch05\\testSet.txt")
     for line in fr.readlines():
         lineArr = line.strip().split()
         dataMat.append([1.0, float(lineArr[0]), float(lineArr[1])])
         labelMat.append(int(lineArr[2]))
     return dataMat, labelMat
+
+def sigmod1(W, X):
+    return 1 / (1 + exp(- W * X))
+
+def logLearning(W, data, label, alpha, k):
+    W = array(W)
+    data = matrix(data)
+    label = array(label)
+    for i in range(k):
+        proData = sigmod1(W, data.T)
+        diff = label - proData
+        W = W + alpha * diff * data
+    return W
 
 def sigmoid(inX):
     return 1.0 / (1 + exp(-inX))
@@ -27,7 +40,7 @@ def gradAscent(dataMatIn, classLabels):
     return weights
 
 def plotBestFit(wei):
-    weights = wei.getA()
+    weights = wei
     dataMat, labelMat = loadDataSet()
     dataArr = array(dataMat)
     n = shape(dataArr)[0]
@@ -37,20 +50,36 @@ def plotBestFit(wei):
         if int(labelMat[i]) == 1:
             xcord1.append(dataArr[i, 1]); ycord1.append(dataArr[i, 2])
         else:
-            xcord2.append(dataArr[i, p1]); ycord2.append(dataArr[i, 2])
+            xcord2.append(dataArr[i, 1]); ycord2.append(dataArr[i, 2])
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.scatter(xcord1, ycord1, s = 30, c = 'red', marker = 's')
     ax.scatter(xcord2, ycord2, s = 30, c = 'green')
     x = arange(-3.0, 3.0, 0.1)
-    y = (- weights[0] - weights[1] * x) / weights[2]
+    print(weights)
+    y = (- weights[0] - weights[0] * x) / weights[0]
     ax.plot(x, y)
     plt.xlabel('X1'); plt.ylabel('X2');
     plt.show()
 
+def randomLearning(W, data, label, alpha, k):
+    W = array(W)
+    for j in range(k):
+        dataIndex = list(range(len(data)))
+        for i in range(len(data)):
+            alpha = alpha / (1.0 + j + i) + 0.1
+            randIndex = int(random.uniform(0, len(dataIndex)))
+            h = sigmod1(W, array(data[randIndex]))
+            error = label[randIndex] - h
+            W = W + alpha * error * array(data[randIndex])
+            del(dataIndex[randIndex])
+    return W
+
 def gradTest():
     dataArr, labelMat = loadDataSet()
-    wei = gradAscent(dataArr, labelMat)
+    wei = stoGradAscent1(dataArr, labelMat)
+    #W = ones(len(dataArr[0]))
+    #wei = randomLearning(W, dataArr, labelMat, 4, 150)
     plotBestFit(wei)
 
 def stoGradAscent0(dataMatrix, classLabels):
