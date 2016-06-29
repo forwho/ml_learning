@@ -69,7 +69,13 @@ def smoLearning(dataMatrix, labels, C, k):
                 u = multiply(labels, alpha) * (dataMatrix * dataMatrix.T) + b
     return b, alpha
 
-def svmTest(alpha, b, data):
+def calcW(alpha, dataMatrix, labels):
+    W = zeros(len(dataMatrix[0]))
+    for i in range(len(dataMatrix[0])):
+        W = W + multiply(alpha[i] * labels[i], matrix(dataMatrix)[i,:])
+    return W
+
+def svmTest(W, b, data):
     if (W * matrix(data).T + b) >= 0:
         return 1
     else:
@@ -79,11 +85,13 @@ if __name__ == "__main__":
     dataMatrix, labels = proPrecess("E:\machine learning\codeReg\code\MLiA_SourceCode\machinelearninginaction\Ch06\digits\\testDigits")
     testData, testLabels = proPrecess("E:\machine learning\codeReg\code\MLiA_SourceCode\machinelearninginaction\Ch06\digits\\trainingDigits")
     b, alpha = smoLearning(dataMatrix, labels, 0.6, 40)
+    W = calcW(alpha, dataMatrix, labels)
+    print(W)
     print(alpha[alpha > 0])
     print(b)
     erroNum = 0
     for data in testData:
         print("The real number is %d, and we forcast is %d" % (testLabels[testData.index(data)], svmTest(W, b, data)))
-        if svmTest(alpha, b, data) != testLabels[testData.index(data)]:
+        if svmTest(W, b, data) != testLabels[testData.index(data)]:
             erroNum += 1
     print(erroNum / len(testLabels))
