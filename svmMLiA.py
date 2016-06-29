@@ -65,10 +65,68 @@ def smoSimple(dataMatIn, classLabels, C, toler, maxIter):
         print("iteration number: %d" % iter)
     return b, alphas
 
+def smoLearning(data, labels, C, k, tol):
+    alpha = zeros(len(data))
+    b = 0
+    dataMatrix = matrix(data)
+    u = multiply(labels, alpha) * (dataMatrix * dataMatrix.T) + b
+    iterNum = 0
+    while iterNum < k:
+        alphaChanged = 0
+        for i in range(len(data)):
+            if (labels[i] * u[0, i] < 1 - tol and alpha[i] < C) or (labels[i] * u[0, i] > 1 + tol and alpha[i] > 0):
+                a1Num = i
+                alphaIold = alpha[a1Num]
+                e1 = u[0, a1Num] - labels[a1Num]
+                maxE = 0
+                for j in range(len(data)):
+                    ej = u[0, j] - labels[j]
+                    if abs(e1 - ej) > maxE:
+                        a2Num = j
+                        alphaJold = alpha[a2Num]
+                        e2 = u[0, a2Num] - labels[a2Num]
+                if labels[a1Num] != labels[a2Num]:
+                    L = max(0, alphaJold - alphaIold)
+                    H = min(C, C + alphaJold - alphaIold)
+                else:
+                    L = max(0, alphaJold + alphaIold - C)
+                    H = min(C, alphaJold + alphaIold)
+                if L == H:
+                    continue
+                eta = 2 * dataMatrix[a1Num] * dataMatrix[a2Num].T - dataMatrix[a1Num] * dataMatrix[a1Num].T - dataMatrix[a2Num] * dataMatrix[a2Num].T
+                if eta == 0:
+                    continue
+                a2 = alphaJold - labels[a2Num] * (e1 - e2) / eta
+                if a2 > H:
+                    a2 = H
+                elif e2 < L:
+                    e2 = L
+                else:
+                    pass
+                a1 = alphaIold + labels[a1Num] * labels[a2Num] * (alphaJold - a2)
+                b1 = b - e1 - labels[a1Num] * (a1 - alphaIold) * (dataMatrix[a1Num] * dataMatrix[a1Num].T) - labels[a2Num] * (a2 - alphaJold) * (
+                    dataMatrix[a1Num] * dataMatrix[a2Num].T)
+                b2 = b - e2 - labels[a1Num] * (a1 - alphaIold) * (dataMatrix[a1Num] * dataMatrix[a2Num].T) - labels[a2Num] * (a2 - alphaJold) * (
+                    dataMatrix[a2Num] * dataMatrix[a2Num].T
+                )
+                if a1 > 0 and a1 < C:
+                    b = b1
+                elif a2 > 0 and b2 < C:
+                    b = b2
+                else:
+                    b = (b1 + b2) / 2
+                alpha[a1Num] = a1;  alpha[a2Num] = a2
+                alphaChanged += 1
+                print(alpha)
+
+
+    return b, alpha
+
 def test():
-    dataArr, labelArr = loadDataSet("E:\学习资料\ml\MLiA_SourceCode\machinelearninginaction\Ch06\\testSet.txt")
-    b, alphas = smoSimple(dataArr, labelArr, 0.6, 0.001, 40)
-    print(alphas[alphas > 0 ])
+    dataArr, labelArr = loadDataSet("E:\machine learning\codeReg\code\MLiA_SourceCode\machinelearninginaction\Ch06\\testSet.txt")
+    #b, alphas = smoSimple(dataArr, labelArr, 0.6, 0.001, 40)
+    b, alphas = smoLearning(dataArr, labelArr, 0.6, 40, 0.001)
+    print(alphas)
 
 if __name__ == "__main__":
     test()
