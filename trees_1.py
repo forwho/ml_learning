@@ -1,11 +1,15 @@
+#todo
 import math
 
 def loadData(filename):
     dataList = []
-    labelList = []
     for line in open(filename):
         line = line.strip().split('\t')
-        dataList.append(line[0:-1])
+        data = line[:3]
+        label = ' '.join(line[3:])
+        data.append(label)
+        dataList.append(data)
+    print(dataList)
     return dataList
 
 def calEntropy(dataList):
@@ -33,35 +37,37 @@ def calEntropyAdd(dataList, val, feature):
 
 def createSubTree(dataList, features):
     if len(set(dataList[-1])) == 1:
-        return dataList, featrures
-    if len(features) == 1:
+        return dataList, features
+    if len(features) == 0:
         return dataList, features
     maxEntrophyAdd = 0
     subTree = {}
     for feature in features:
-        for val in set(dataList[feature]):
+        for val in set([value[feature] for value in dataList]):
             EntrophyAdd, right, left = calEntropyAdd(dataList, val, feature)
-            if EntrophyAdd > maxEntrophyAdd:
+            if EntrophyAdd >= maxEntrophyAdd:
                 maxEntrophyAdd = EntrophyAdd
                 subTree['feature'] = feature;   subTree['val'] = val;   subTree['left'] = left;     subTree['right'] = right
             """
     if maxEntrophyAdd < 0.1:
         return dataList, features
         """
-    else:
-        features.remove(subTree['feature'])
-        return subTree, features
+    features.remove(subTree['feature'])
+    return subTree, features, subTree['feature']
 
-def createTree(dataList, features):
-    tree, features = createSubTree(dataList, features)
-    if len(set([val[-1] for val in tree['left']])) > 1 and len(features) > 1:
-        tree['left'] = createTree(tree['left'], features)
+def createTree(dataList, features, child):
+    tree, features, delFeature = createSubTree(dataList, features)
+    children = child
+    if len(set([val[-1] for val in tree['left']])) > 1 and len(features) > 0:
+        tree['left'], children = createTree(tree['left'], features, 'left')
+    if (children == 'left'):
+        features.append(delFeature)
     if len(set([val[-1] for val in tree['right']])) > 1 and len(features) > 1:
-        tree['right'] = createTree(tree['right'], features)
-    return tree
+        tree['right'], children = createTree(tree['right'], features, 'right')
+    print(tree)
+    return tree, child
 
 if __name__ == "__main__":
-    dataList = loadData("E:\machine learning\codeReg\code\MLiA_SourceCode\machinelearninginaction\Ch03\lenses.txt")
+    dataList = loadData("E:\学习资料\ml\MLiA_SourceCode\machinelearninginaction\Ch03\lenses.txt")
     features = list(range(len(dataList[0]) - 1))
-    tree = createTree(dataList, features)
-    print(tree)
+    tree = createTree(dataList, features, 'parent')
